@@ -1,0 +1,54 @@
+<style>
+    body {
+        background-color: #141414;
+        text-align: center;
+        font-family: 'Roboto', sans-serif;
+        font-size: 24px;
+        color: #FFF;
+        margin-top: 0px;
+    }
+
+    button {
+        background-color: #FFF;
+        border: 1px solid #FFF;
+        border-radius: 5px;
+        padding: 10px;
+        margin: 10px;
+        color: #141414;
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+</style>
+<div>
+    <h1>Authorize Your Accounts!</h1>
+    <br>
+    <h2 id="status"></h2>
+    <div id="bruh"></div>
+</div>
+<script>
+    check();
+    setInterval(check, 1000);
+    function check() {
+        fetch('/status')
+            .then(res => res.json())
+            .then(data => {
+                if (data.bot && data.streamer == false) {
+                    document.getElementById('status').innerHTML = 'Only the bot is Authorized!';
+                    document.getElementById('bruh').innerHTML = '<a href="/authorize/client"> <button>Authorize Streamer</button> </a>';
+                }
+                if (data.bot == false && data.streamer) {
+                    document.getElementById('status').innerHTML = 'Only the streamer is Authorized!';
+                    document.getElementById('bruh').innerHTML = '<a href="/authorize/bot"> <button>Authorize Bot</button> </a>';
+                }
+                if (data.bot == false && data.streamer == false) {
+                    document.getElementById('status').innerHTML = 'Neither the bot nor the streamer is Authorized!';
+                    document.getElementById('bruh').innerHTML = '<a href="/authorize/client"> <button>Authorize Streamer</button> </a>';
+                    document.getElementById('bruh').innerHTML += '<a href="/authorize/bot"> <button>Authorize Bot</button> </a>';
+                }
+                if (data.bot && data.streamer) {
+                    window.location.href = '/dashboard';
+                }
+            })
+    }
+</script>
