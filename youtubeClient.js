@@ -4,7 +4,7 @@ const fs = require('fs');
 let liveChatId = fs.readFileSync('./liveChatId.txt', 'utf8');
 const youtubeBot = require('./youtubeBot.js');
 let nextPage;
-const intervalTime = 5000;
+const intervalTime = 2000;
 let interval;
 let chatMessages = [];
 const writeFilePromise = util.promisify(fs.writeFile);

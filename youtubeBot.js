@@ -69,18 +69,30 @@ const checkTokens = async () => {
 };
 
 youtubeService.respond = newMessages => {
+  let commands = require('./commands.json');
+  let blacklist = require('./blacklist.json');
   newMessages.forEach(message => {
-    if (archive.includes(message.etag) == false) {
+    if (archive.includes(message.id) == false) {
       const messageText = message.snippet.displayMessage.toLowerCase();
-      archive.push(message.etag);
+      archive.push(message.id);
       chatMessages.push(message);
-      if (messageText.includes('thank')) {
-        const author = message.authorDetails.displayName;
-        const response = `You're welcome ${author}!`;
-        youtubeService.insertMessage(response);
+      if (blacklist.includes(message.authorDetails.channelId) == false) {
+        commands.forEach(command => {
+          if (messageText.includes(command.keyword)) {
+            command.response = command.response.replace(/\$\{username\}/g, message.authorDetails.displayName);
+            command.response = command.response.replace(/\$\{query\}/g, messageText.split('' + command.keyword + ' ')[1]);
+            youtubeService.insertMessage(command.response);
+          }
+        });
       }
     }
   });
+  while (chatMessages.length > 100) {
+    chatMessages.shift();
+  }
+  while (archive.length > 100) {
+    archive.shift();
+  }
   save('./chatMessages.json', JSON.stringify(chatMessages));
   save('./archive.json', JSON.stringify(archive));
 };
@@ -110,6 +122,4 @@ youtubeService.insertMessage = messageText => {
 
 checkTokens();
 
-// As we progress throug this turtorial, Keep the following line at the nery bottom of the file
-// It will allow other files to access to our functions
 module.exports = youtubeService;

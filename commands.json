@@ -1,3 +1,9 @@
 [{
-    
+    "name": "test",
+    "keyword": "!test",
+    "response": "Hello ${username}!"
+}, {
+    "name": "test2",
+    "keyword": "!test2",
+    "response": "${username} said: ${query}."
 }]

@@ -13,7 +13,8 @@
             font-family: 'Roboto', sans-serif;
         }
 
-        a, a:visited {
+        a,
+        a:visited {
             color: #fff;
             text-decoration: none;
         }
@@ -117,10 +118,9 @@
             fetch('/api/chatMessages')
                 .then(res => res.json())
                 .then(data => {
-                    data = data.reverse();
                     let chat = document.getElementById("chat");
                     for (let i = 0; i < data.length; i++) {
-                        if (!displayed.includes(data[i].etag)) {
+                        if (!displayed.includes(data[i].id)) {
                             let message = document.createElement("div");
                             message.classList.add("chat-item");
                             message.innerHTML = `
@@ -128,7 +128,7 @@
                             <p class="chatName">${data[i].authorDetails.displayName}</p>
                             <p class="chatMessage">${data[i].snippet.displayMessage}</p>`
                             prependChild(message, chat);
-                            displayed.push(data[i].etag);
+                            displayed.push(data[i].id);
                         }
                     }
                 });

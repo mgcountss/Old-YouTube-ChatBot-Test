@@ -48,6 +48,9 @@ server.get('/api/sendMessage', (req, res) => {
         } else {
             youtubeClient.insertMessage(req.query.message);
         }
+        res.send('Message sent');
+    } else {
+        res.send({ 'error': 'Message too short' });
     }
 });
 
