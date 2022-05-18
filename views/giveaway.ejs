@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YouTube ChatBot Bot</title>
+    <style>
+        body {
+            background-color: #141414;
+            text-align: center;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        a,
+        a:visited {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .all {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 10fr 1.5fr;
+            gap: 0px 0px;
+        }
+
+        .selected {
+            background-color: #f9c7c8 !important;
+            border: solid red 1px !important;
+            z-index: 1 !important;
+        }
+
+        .list-group-item {
+            background-color: #000;
+            color: #FFF;
+            font-size: 35px;
+            border: solid #FFF 1px;
+        }
+
+        .chat-item {
+            border: solid #FFF 1px;
+            text-align: left;
+        }
+
+        #chat {
+            overflow: scroll;
+            height: 95vh;
+        }
+
+        .chatName {
+            font-weight: bolder;
+            color: #000;
+            margin-top: 0px;
+            font-size: 2vh;
+            width: 99%;
+        }
+
+        .chatMessage {
+            font-weight: normal;
+            color: #000;
+            margin-top: 0px;
+            font-size: 2vh;
+            width: 99%;
+        }
+
+        button:hover {
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="all">
+        <div id="main">
+            <div id="chat" style="display: grid; grid-template-columns: 1fr 3fr;">
+                <div style="border: solid #FFF; overflow-y: scroll;" id="users">
+                    <h1 style="color: #FFF; margin-top: 0px;">Users</h1>
+
+                </div>
+                <div>
+                    <input id="command" placeholder="Command" style="font-size: calc(1.5vw + 1vh);">
+                    <input id="prize" placeholder="Prize" style="font-size: calc(1.5vw + 1vh);">
+                    <div style="display: grid; grid-template-columns: 2fr 2fr;">
+                        <div>
+                            <h4 style="color: #FFF; margin-top: 0px;">Who can enter this giveaway?</h4>
+                            <select style="font-size: calc(0.5vw + 1vh);" id="perms">
+                                <option value="everyone">Everyone</option>
+                                <option value="mods">Mods Only</option>
+                            </select>
+                        </div>
+                        <div>
+                            <h4 style="color: #FFF; margin-top: 0px;">Requirements?</h4>
+                            <input type="checkbox" id="points" name="points" value="points">
+                            <label for="points" style="color: #FFF;">Points</label><br>
+                            <input type="number" id="points_num" name="points_num" value="points_num">
+                            <br><br>
+                            <input type="checkbox" id="hours" name="hours" value="hours">
+                            <label for="hours" style="color: #FFF;">Hours</label><br>
+                            <input type="number" id="hours_num" name="hours_num" value="hours_num">
+                        </div>
+                    </div>
+                    <br>
+                    <button style="font-size: calc(1.5vw + 1vh);" onclick="start()" id="start" disabled>Start
+                        Giveaway</button>
+                    <br>
+                    <button style="font-size: calc(1.5vw + 1vh);" onclick="end()" id="end" disabled>End
+                        Giveaway</button>
+                    <br>
+                    <button style="font-size: calc(1.5vw + 1vh);" onclick="pick()" id="pick" disabled>Pick
+                        Winner</button>
+                    <br>
+                    <br>
+                    <center>
+                        <div id="winner" style="border: solid #FFF; border-radius: 5px; width: 50%; color: #FFF;">
+                            <img src="" id="winner1">
+                            <h2 id="winner2"></h2>
+                        </div>
+                    </center>
+                </div>
+            </div>
+        </div>
+        <div id="side">
+            <div id="list" class="list-group">
+                <div class="list-group-item"><a href="/dashboard">Chat</a></div>
+                <div class="list-group-item"><a href="/commands">Commands</a></div>
+                <div class="list-group-item"><a href="/users">Users</a></div>
+                <div class="list-group-item"><a href="/music">Music Player</a></div>
+                <div class="list-group-item"><a href="/giveaway">Giveaway</a></div>
+                <div class="list-group-item"><a href="/import">Importer</a></div>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="https://raw.githack.com/SortableJS/Sortable/master/Sortable.js"></script>
+<script>
+    let lastID = "";
+    function fetcher() {
+        fetch('/api/giveaway')
+            .then(res => res.json())
+            .then(data => {
+                if (data.winner.id) {
+                    document.getElementById("winner1").src = data.winner.image;
+                    document.getElementById("winner2").innerHTML = data.winner.name;
+                    document.getElementById("winner").style.display = "";
+                } else {
+                    document.getElementById("winner").style.display = "none";
+                }
+                if (data.enabled == true) {
+                    document.getElementById('start').disabled = true
+                    document.getElementById('end').disabled = false
+                    document.getElementById('pick').disabled = true
+                } else {
+                    document.getElementById('start').disabled = false
+                    document.getElementById('end').disabled = true
+                    document.getElementById('pick').disabled = true
+                }
+                if (data.users.length > 0 && data.enabled == false) {
+                    document.getElementById('pick').disabled = false
+                }
+                if (data.users.length > 0) {
+                    if (data.users[data.users.length - 1].id !== lastID) {
+                        data.users.forEach(user => {
+                            let user_div = document.createElement('div');
+                            user_div.className = 'list-group-item';
+                            user_div.innerHTML = `<a href="https://youtube.com/channel/${user.id}">${user.name}</a>`;
+                            document.getElementById('users').appendChild(user_div);
+                        });
+                    }
+                    lastID = data.users[data.users.length - 1].id;
+                }
+            })
+    }
+
+    Sortable.create(list, {
+        group: 'shared',
+        multiDrag: false,
+        animation: 150
+    });
+
+    function prependChild(newElement, parentElement) {
+        var firstchild = parentElement.childNodes[0];
+        parentElement.insertBefore(newElement, firstchild);
+    }
+
+    function start() {
+        if (document.getElementById("command").value == "") {
+            alert("Please enter a command.");
+            return;
+        } else if (document.getElementById('prize').value == "") {
+            alert("Please enter what the prize is.");
+            return;
+        } else {
+            let perms = document.getElementById('perms').value;
+            let require = "none";
+            if (document.getElementById('points').checked == true) {
+                if (document.getElementById('points_num').value.length > 0) {
+                    require = "points_" + document.getElementById('points_num').value;
+                } else {
+                    alert("Please enter a number of points.");
+                    return;
+                }
+            } else if (document.getElementById('hours').checked == true) {
+                if (document.getElementById('hours_num').value.length > 0) {
+                    require = "hours_" + document.getElementById('hours_num').value;
+                } else {
+                    alert("Please enter a number of hours.");
+                    return;
+                }
+            } else {
+                require = "none";
+            }
+            let command = document.getElementById('command').value;
+            let prize = document.getElementById('prize').value;
+            fetch('/giveaway/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    perms: perms,
+                    require: require,
+                    command: command,
+                    prize: prize
+                })
+            }).then(res => res.json())
+                .then(data => {
+                    if (data.success == true) {
+                        alert("Giveaway started!");
+                        location.reload();
+                    } else {
+                        alert("Something went wrong.");
+                        location.reload();
+                    }
+                });
+        }
+    }
+    setInterval(fetcher, 1000);
+    fetcher()
+
+    function end() {
+        fetch('/giveaway/end', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        }).then(res => res.json())
+            .then(data => {
+                if (data.success == true) {
+                    alert("Giveaway ended!");
+                } else {
+                    alert("Something went wrong.");
+                }
+            });
+    }
+
+    function pick() {
+        fetch('/giveaway/pick', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        }).then(res => res.json())
+            .then(data => {
+                if (data.success == true) {
+                    alert("Winner: " + data.winner.name + "!");
+                } else {
+                    alert("Something went wrong.");
+                }
+            });
+    }
+</script>
+
+</html>

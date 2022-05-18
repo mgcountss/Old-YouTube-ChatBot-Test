@@ -1,9 +1,22 @@
-[{
-    "name": "test",
-    "keyword": "!test",
-    "response": "Hello ${username}!"
-}, {
-    "name": "test2",
-    "keyword": "!test2",
-    "response": "${username} said: ${query}."
-}]
+[
+    {
+        "keyword": "!test",
+        "response": "Hello ${username}!",
+        "permissions": {
+            "everyone": false,
+            "mods": false,
+            "owner": true
+        },
+        "id": "0wC1X"
+    },
+    {
+        "keyword": "!test2",
+        "response": "${username} said: ${query}.",
+        "permissions": {
+            "everyone": true,
+            "mods": false,
+            "owner": false
+        },
+        "id": "k8Kcb"
+    }
+]

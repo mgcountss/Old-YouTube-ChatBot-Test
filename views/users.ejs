@@ -51,19 +51,18 @@
 
         .chatName {
             font-weight: bolder;
-            color: #FFF;
+            color: #000;
             margin-top: 0px;
+            font-size: 2vh;
+            width: 99%;
         }
 
         .chatMessage {
             font-weight: normal;
-            color: #FFF;
-            margin-top: -15px;
-        }
-
-        .send input,
-        .send button {
-            font-size: 25px;
+            color: #000;
+            margin-top: 0px;
+            font-size: 2vh;
+            width: 99%;
         }
 
         button:hover {
@@ -75,10 +74,31 @@
 <body>
     <div class="all">
         <div id="main">
-            <div id="chat"></div>
-            <div class="send">
-                <input style="width: 95%;" type="text" id="message" placeholder="Type your message here...">
-                <button id="send" onclick="sendMessage()">Send</button>
+            <div id="chat">
+                <table style="border: solid #FFF 1px; color: #FFF; width: 99%;">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Points</th>
+                            <th>Hours</th>
+                            <th>Last Message</th>
+                            <th>Rank</th>
+                            <th>ID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% users.forEach(user=> { %>
+                            <tr>
+                                <td><%=user.name%></td>
+                                <th><%=user.points%></th>
+                                <th><%=user.hours%></th>
+                                <th><%=new Date(user.lastMSG).toString().split('GMT')[0]%></th>
+                                <th><%=user.rank%></th>
+                                <th><%=user.id%></th>
+                            </tr>
+                            <% }) %>
+                    </tbody>
+                </table>
             </div>
         </div>
         <div id="side">
@@ -95,70 +115,16 @@
 </body>
 <script src="https://raw.githack.com/SortableJS/Sortable/master/Sortable.js"></script>
 <script>
-    let current = "Chat";
-    let sender = "User";
-    let displayed = [];
-
     Sortable.create(list, {
         group: 'shared',
         multiDrag: false,
         animation: 150
     });
 
-    function sendMessage() {
-        let message = document.getElementById("message").value;
-        fetch("/api/sendMessage", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                message: message,
-                sender: sender
-            })
-        }).then(res => res.json()).then(data => {
-            if (data.success) {
-                document.getElementById("message").value = "";
-            }
-        });
-    }
-
-    function update() {
-        if (current == "Chat") {
-            fetch('/api/chatMessages')
-                .then(res => res.json())
-                .then(data => {
-                    let chat = document.getElementById("chat");
-                    for (let i = 0; i < data.length; i++) {
-                        if (!displayed.includes(data[i].id)) {
-                            let message = document.createElement("div");
-                            message.classList.add("chat-item");
-                            message.innerHTML = `
-                            <img src="${data[i].authorDetails.profileImageUrl}" style="float: left; width: 50px; height: 50px; border-radius: 50%;">
-                            <p class="chatName">${data[i].authorDetails.displayName}</p>
-                            <p class="chatMessage">${data[i].snippet.displayMessage}</p>`
-                            //prependChild(message, chat);
-                            chat.appendChild(message);
-                            displayed.push(data[i].id);
-                            document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
-                        }
-                    }
-                });
-        }
-    }
-    update();
-    setInterval(update, 1000);
-
     function prependChild(newElement, parentElement) {
         var firstchild = parentElement.childNodes[0];
         parentElement.insertBefore(newElement, firstchild);
     }
-
-    document.getElementById("message").addEventListener("keydown", function (e) {
-        if (e.keyCode === 13) {
-            sendMessage();
-        }
-    });
 </script>
 
 </html>

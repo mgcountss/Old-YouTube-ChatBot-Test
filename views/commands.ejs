@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YouTube ChatBot Bot</title>
+    <style>
+        body {
+            background-color: #141414;
+            text-align: center;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        a,
+        a:visited {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .all {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 10fr 1.5fr;
+            gap: 0px 0px;
+        }
+
+        .selected {
+            background-color: #f9c7c8 !important;
+            border: solid red 1px !important;
+            z-index: 1 !important;
+        }
+
+        .list-group-item {
+            background-color: #000;
+            color: #FFF;
+            font-size: 35px;
+            border: solid #FFF 1px;
+        }
+
+        .chat-item {
+            border: solid #FFF 1px;
+            text-align: left;
+        }
+
+        #chat {
+            overflow: scroll;
+            height: 95vh;
+        }
+
+        .chatName {
+            font-weight: bolder;
+            color: #000;
+            margin-top: 0px;
+            font-size: 2vh;
+            width: 99%;
+        }
+
+        .chatMessage {
+            font-weight: normal;
+            color: #000;
+            margin-top: 0px;
+            font-size: 2vh;
+            width: 99%;
+        }
+
+        button:hover {
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="all">
+        <div id="main">
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); width: 40%;">
+                <div>
+                    <input style="font-size: 2vh; width: 100%;" placeholder="Command Name" id="CNAME">
+                    <br>
+                    <input style="font-size: 2vh; width: 100%;" placeholder="Command Response" id="CRES">
+                </div>
+                <div>
+                    <h4 style="color: #FFF; margin-top: 0px;">Who can use this command?</h4>
+                    <input type="checkbox" id="everyone" name="everyone" value="everyone">
+                    <label for="everyone" style="color: #FFF;">Everyone</label><br>
+                    <input type="checkbox" id="mods" name="mods" value="mods">
+                    <label for="mods" style="color: #FFF;">Mods</label><br>
+                    <input type="checkbox" id="owner" name="owner" value="owner">
+                    <label for="owner" style="color: #FFF;">Owner</label><br>
+                </div>
+                <button style="font-size: 2vh;" onclick="create()">Create</button>
+            </div>
+            <br>
+            <div id="chat">
+                <% commands.forEach(command=> { %>
+                    <div class="chat-item">
+                        <input class="chatName" id="name_<%=command.id%>" value="<%=command.keyword%>">
+                        <input class="chatMessage" id="value_<%=command.id%>" value="<%=command.response%>">
+                        <div>
+                            <h4 style="color: #FFF; margin-top: 0px;">Who can use this command?</h4>
+                            <input id="everyone_<%=command.id%>" type="checkbox" id="everyone" name="everyone"
+                                value="everyone"  <% if (command.permissions.everyone == true) {%> checked <%}%>>
+                            <label for="everyone" style="color: #FFF;">Everyone</label><br>
+                            <input id="mods_<%=command.id%>" type="checkbox" id="mods" name="mods" value="mods" <% if (command.permissions.mods == true) {%> checked <%}%>>
+                            <label for="mods" style="color: #FFF;">Mods</label><br>
+                            <input id="owner_<%=command.id%>" type="checkbox" id="owner" name="owner" value="owner" <% if (command.permissions.owner == true) {%> checked <%}%>>
+                            <label for="owner" style="color: #FFF;">Owner</label><br>
+                        </div>
+                        <br>
+                        <button style="font-size: 2vh;" onclick="edit('<%=command.id%>')">Submit Changes</button>
+                        <button style="font-size: 2vh;" onclick="deleteCommand('<%=command.id%>')">Delete
+                            Command</button>
+                    </div>
+                    <% }) %>
+            </div>
+        </div>
+        <div id="side">
+            <div id="list" class="list-group">
+                <div class="list-group-item"><a href="/dashboard">Chat</a></div>
+                <div class="list-group-item"><a href="/commands">Commands</a></div>
+                <div class="list-group-item"><a href="/users">Users</a></div>
+                <div class="list-group-item"><a href="/music">Music Player</a></div>
+                <div class="list-group-item"><a href="/giveaway">Giveaway</a></div>
+                <div class="list-group-item"><a href="/import">Importer</a></div>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="https://raw.githack.com/SortableJS/Sortable/master/Sortable.js"></script>
+<script>
+    Sortable.create(list, {
+        group: 'shared',
+        multiDrag: false,
+        animation: 150
+    });
+
+    function prependChild(newElement, parentElement) {
+        var firstchild = parentElement.childNodes[0];
+        parentElement.insertBefore(newElement, firstchild);
+    }
+
+    function create() {
+        if (document.getElementById("CNAME").value == "" || document.getElementById("CRES").value == "") {
+            alert("Please fill out all fields!");
+            return;
+        }
+        if (document.getElementById("everyone").checked == false && document.getElementById("mods").checked == false && document.getElementById("owner").checked == false) {
+            alert("Please select who can use this command!");
+            return;
+        }
+        fetch('/api/commands/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                keyword: document.getElementById('CNAME').value,
+                response: document.getElementById('CRES').value,
+                permissions: {
+                    everyone: document.getElementById('everyone').checked,
+                    mods: document.getElementById('mods').checked,
+                    owner: document.getElementById('owner').checked
+                }
+            })
+        }).then(res => res.json())
+            .then(data => {
+                if (data.success == true) {
+                    alert('Command created!')
+                    location.reload()
+                } else {
+                    alert('This command already exists.')
+                }
+            })
+    }
+
+    function deleteCommand(id) {
+        let areyousure = confirm("Are you sure you want to delete this command?");
+        if (areyousure == true) {
+            fetch('/api/commands/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: id
+                })
+            }).then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Command deleted!')
+                        location.reload()
+                    } else {
+                        alert('Something went wrong.')
+                        location.reload()
+                    }
+                })
+        }
+    }
+
+    function edit(id) {
+        console.log(id)
+        if (document.getElementById("name_" + id + "").value == "" || document.getElementById("value_" + id + "").value == "") {
+            alert("Please fill out all fields!");
+            return;
+        }
+        if (document.getElementById("everyone_" + id + "").checked == false && document.getElementById("mods_" + id + "").checked == false && document.getElementById("owner_" + id + "").checked == false) {
+            alert("Please select who can use this command!");
+            return;
+        }
+        fetch('/api/commands/edit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                keyword: document.getElementById('name_' + id + '').value,
+                response: document.getElementById('value_' + id + '').value,
+                id: id,
+                permissions: {
+                    everyone: document.getElementById('everyone_' + id + '').checked,
+                    mods: document.getElementById('mods_' + id + '').checked,
+                    owner: document.getElementById('owner_' + id + '').checked
+                }
+            })
+        }).then(res => res.json())
+            .then(data => {
+                if (data.success == true) {
+                    alert('Edited command!')
+                    location.reload()
+                } else {
+                    alert('Something went wrong.')
+                }
+            })
+    }
+
+</script>
+
+</html>

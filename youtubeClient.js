@@ -3,6 +3,7 @@ const util = require('util');
 const fs = require('fs');
 let liveChatId = fs.readFileSync('./liveChatId.txt', 'utf8');
 const youtubeBot = require('./youtubeBot.js');
+const fetch = require('node-fetch');
 let nextPage;
 const intervalTime = 2000;
 let interval;
@@ -73,18 +74,24 @@ const checkTokens = async () => {
     auth.setCredentials(tokens);
   }
 };
-
 const getChatMessages = async () => {
-  const response = await youtube.liveChatMessages.list({
-    auth,
-    part: 'snippet,authorDetails',
-    liveChatId,
-    pageToken: nextPage
-  });
-  const { data } = response;
-  chatMessages = data.items;
-  nextPage = data.nextPageToken;
-  youtubeBot.respond(chatMessages);
+  if (nextPage !== undefined) {
+  fetch('https://www.googleapis.com/youtube/v3/liveChat/messages?part=snippet,authorDetails&liveChatId=' + liveChatId + '&key=' + process.env.YOUTUBE_API_KEY + '&pageToken=' + nextPage)
+    .then(res => res.json())
+    .then(data => {
+      chatMessages = data.items;
+      nextPage = data.nextPageToken;
+      youtubeBot.respond(chatMessages);
+    })
+  } else {
+    fetch('https://www.googleapis.com/youtube/v3/liveChat/messages?part=snippet,authorDetails&liveChatId=' + liveChatId + '&key=' + process.env.YOUTUBE_API_KEY + '')
+    .then(res => res.json())
+    .then(data => {
+      chatMessages = data.items;
+      nextPage = data.nextPageToken;
+      youtubeBot.respond(chatMessages);
+    })
+  }
 };
 
 youtubeService.startTrackingChat = () => {
